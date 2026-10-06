@@ -1,10 +1,12 @@
 import csv
 import pycountry
 from dataclasses import dataclass
+from datetime import date
 
 from src.calendar import (
     analyze_daily_performance,
     build_daily_calendar,
+    filter_records_by_date_range,
     get_active_daily_performance,
     summarize_monthly_performance,
 )
@@ -163,10 +165,10 @@ def load_records_from_csv(file_path):
             )
 
         for row_number, row in enumerate(reader, start=2):
-            date = row["date"].strip()
+            record_date = row["date"].strip()
             description = row["description"].strip()
 
-            if not date:
+            if not record_date:
                 raise InvalidBusinessDataError(
                     f"Missing date on row {row_number}."
                 )
@@ -174,6 +176,13 @@ def load_records_from_csv(file_path):
             if not description:
                 raise InvalidBusinessDataError(
                     f"Missing description on row {row_number}."
+                )
+
+            try:
+                date.fromisoformat(record_date)
+            except ValueError:
+                raise InvalidBusinessDataError(
+                    f"Invalid date on row {row_number}."
                 )
 
             try:
@@ -197,7 +206,7 @@ def load_records_from_csv(file_path):
                 )
 
             record = BusinessRecord(
-                date=date,
+                date=record_date,
                 description=description,
                 sales=sales,
                 expenses=expenses,
@@ -339,6 +348,85 @@ def display_daily_performance(records):
             )
 
 
+def display_date_range_performance(
+    records,
+    start_date,
+    end_date,
+):
+    """Display business performance for a selected date range."""
+    if start_date > end_date:
+        raise ValueError(
+            "Start date cannot be later than end date."
+        )
+
+    filtered_records = filter_records_by_date_range(
+        records,
+        start_date,
+        end_date,
+    )
+
+    print("\nDate Range Performance")
+    print("======================")
+    print(f"Period: {start_date} to {end_date}")
+
+    if not filtered_records:
+        print("\nNo transactions found in the selected date range.")
+        return
+
+    currencies = sorted(
+        {record.currency for record in filtered_records}
+    )
+
+    for currency in currencies:
+        currency_records = [
+            record
+            for record in filtered_records
+            if record.currency == currency
+        ]
+
+        summary = summarize_records(currency_records)
+        averages = calculate_average_transaction(
+            currency_records
+        )
+
+        currency_name = get_currency_name(currency)
+
+        print(f"\nCurrency: {currency} - {currency_name}")
+
+        print(
+            f"Transactions: {len(currency_records)}"
+        )
+        print(
+            f"Sales: "
+            f"{currency} {summary['total_sales']:,.2f}"
+        )
+        print(
+            f"Expenses: "
+            f"{currency} {summary['total_expenses']:,.2f}"
+        )
+        print(
+            f"Profit: "
+            f"{currency} {summary['total_profit']:,.2f}"
+        )
+        print(
+            f"Profit Margin: "
+            f"{summary['profit_margin']:.2f}%"
+        )
+
+        print(
+            f"Average Sales: "
+            f"{currency} {averages['average_sales']:,.2f}"
+        )
+        print(
+            f"Average Expenses: "
+            f"{currency} {averages['average_expenses']:,.2f}"
+        )
+        print(
+            f"Average Profit: "
+            f"{currency} {averages['average_profit']:,.2f}"
+        )
+
+
 def display_csv_report(file_path):
     """Display a business performance report from a CSV file."""
     records = load_records_from_csv(file_path)
@@ -451,13 +539,25 @@ def main():
     file_path = "data/raw/business_data.csv"
 
     try:
+        records = load_records_from_csv(file_path)
+
         display_csv_report(file_path)
+
+        display_date_range_performance(
+            records,
+            date(2026, 10, 2),
+            date(2026, 10, 4),
+        )
 
     except FileNotFoundError:
         print(f"Error: CSV file not found: {file_path}")
         raise SystemExit(1)
 
     except InvalidBusinessDataError as error:
+        print(f"Error: {error}")
+        raise SystemExit(1)
+
+    except ValueError as error:
         print(f"Error: {error}")
         raise SystemExit(1)
 

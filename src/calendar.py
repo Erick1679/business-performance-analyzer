@@ -142,9 +142,13 @@ def analyze_daily_performance(daily_data):
         "highest_profit_day": highest_profit_day,
         "lowest_profit_day": lowest_profit_day,
     }
+
+
 def get_daily_performance(daily_data, target_date):
     """Return performance data for a specific date."""
     return daily_data.get(target_date)
+
+
 def get_performance_between_dates(
     daily_data,
     start_date,
@@ -156,6 +160,8 @@ def get_performance_between_dates(
         for current_date, day_data in daily_data.items()
         if start_date <= current_date <= end_date
     }
+
+
 def summarize_monthly_performance(daily_data, year=None):
     """Summarize business performance for each month."""
     monthly_data = {}
@@ -196,3 +202,20 @@ def summarize_monthly_performance(daily_data, year=None):
             ) * 100
 
     return monthly_data
+
+
+def filter_records_by_date_range(
+    records,
+    start_date,
+    end_date,
+):
+    """Return records whose dates fall within an inclusive date range."""
+    filtered_records = []
+
+    for record in records:
+        record_date = date.fromisoformat(record.date)
+
+        if start_date <= record_date <= end_date:
+            filtered_records.append(record)
+
+    return filtered_records

@@ -19,12 +19,15 @@ from src.calendar import (
     analyze_daily_performance,
     build_daily_calendar,
     calculate_daily_profit_margin,
+    filter_records_by_date_range,
     generate_calendar,
     get_active_daily_performance,
     get_daily_performance,
     get_performance_between_dates,
     summarize_monthly_performance,
 )
+
+
 def test_calculate_profit():
     assert calculate_profit(15000, 9000) == 6000
 
@@ -292,6 +295,8 @@ def test_get_top_transaction_by_profit():
 
     assert top_transaction.description == "Consulting Project"
     assert top_transaction.profit == 6000
+
+
 def test_get_lowest_transaction_by_profit():
     records = [
         BusinessRecord(
@@ -321,6 +326,8 @@ def test_get_lowest_transaction_by_profit():
 
     assert lowest_transaction.description == "Training"
     assert lowest_transaction.profit == 1000
+
+
 def test_rank_transactions_by_profit():
     records = [
         BusinessRecord(
@@ -366,6 +373,8 @@ def test_rank_transactions_by_profit():
 
     assert ranked_transactions[3].description == "Training"
     assert ranked_transactions[3].profit == 1000
+
+
 def test_generate_calendar_for_non_leap_year():
     dates = generate_calendar(2026)
 
@@ -386,6 +395,8 @@ def test_generate_calendar_includes_february_29_in_leap_year():
     dates = generate_calendar(2028)
 
     assert date(2028, 2, 29) in dates
+
+
 def test_build_daily_calendar_includes_dates_without_transactions():
     records = [
         BusinessRecord(
@@ -442,6 +453,8 @@ def test_build_daily_calendar_combines_multiple_transactions_on_same_date():
         "profit": 10000,
         "transaction_count": 2,
     }
+
+
 def test_analyze_daily_performance():
     records = [
         BusinessRecord(
@@ -527,6 +540,8 @@ def test_analyze_daily_performance_with_no_transactions():
 
     assert analysis["highest_profit_day"] is None
     assert analysis["lowest_profit_day"] is None
+
+
 def test_calculate_daily_profit_margin():
     day_data = {
         "sales": 10000,
@@ -579,6 +594,8 @@ def test_get_active_daily_performance():
     assert active_days[1]["expenses"] == 4000
     assert active_days[1]["profit"] == 1000
     assert active_days[1]["profit_margin"] == 20
+
+
 def test_get_daily_performance():
     daily_data = {
         date(2026, 10, 1): {
@@ -604,6 +621,8 @@ def test_get_daily_performance():
     assert performance["expenses"] == 9000
     assert performance["profit"] == 6000
     assert performance["transaction_count"] == 1
+
+
 def test_get_performance_between_dates():
     daily_data = {
         date(2026, 10, 1): {
@@ -646,6 +665,8 @@ def test_get_performance_between_dates():
 
     assert performance[date(2026, 10, 2)]["profit"] == 4000
     assert performance[date(2026, 10, 3)]["profit"] == 1000
+
+
 def test_summarize_monthly_performance():
     daily_data = {
         date(2026, 10, 1): {
@@ -688,3 +709,91 @@ def test_summarize_monthly_performance():
     assert monthly_data["2026-11"]["transaction_count"] == 1
     assert monthly_data["2026-11"]["active_days"] == 1
     assert monthly_data["2026-11"]["profit_margin"] == 20
+
+
+def test_filter_records_by_date_range():
+    records = [
+        BusinessRecord(
+            date="2026-10-01",
+            description="Consulting Project",
+            sales=15000,
+            expenses=9000,
+            currency="USD",
+        ),
+        BusinessRecord(
+            date="2026-10-02",
+            description="Data Analysis",
+            sales=10000,
+            expenses=6000,
+            currency="USD",
+        ),
+        BusinessRecord(
+            date="2026-10-03",
+            description="Training",
+            sales=5000,
+            expenses=4000,
+            currency="USD",
+        ),
+        BusinessRecord(
+            date="2026-10-04",
+            description="Executive Assistance",
+            sales=8000,
+            expenses=3500,
+            currency="USD",
+        ),
+        BusinessRecord(
+            date="2026-10-05",
+            description="Business Consulting",
+            sales=12000,
+            expenses=7000,
+            currency="EUR",
+        ),
+    ]
+
+    filtered_records = filter_records_by_date_range(
+        records,
+        date(2026, 10, 2),
+        date(2026, 10, 4),
+    )
+
+    assert len(filtered_records) == 3
+
+    assert filtered_records[0].date == "2026-10-02"
+    assert filtered_records[1].date == "2026-10-03"
+    assert filtered_records[2].date == "2026-10-04"
+
+
+def test_filter_records_by_date_range_is_inclusive():
+    records = [
+        BusinessRecord(
+            date="2026-10-01",
+            description="Consulting Project",
+            sales=15000,
+            expenses=9000,
+            currency="USD",
+        ),
+        BusinessRecord(
+            date="2026-10-02",
+            description="Data Analysis",
+            sales=10000,
+            expenses=6000,
+            currency="USD",
+        ),
+        BusinessRecord(
+            date="2026-10-03",
+            description="Training",
+            sales=5000,
+            expenses=4000,
+            currency="USD",
+        ),
+    ]
+
+    filtered_records = filter_records_by_date_range(
+        records,
+        date(2026, 10, 1),
+        date(2026, 10, 3),
+    )
+
+    assert len(filtered_records) == 3
+    assert filtered_records[0].date == "2026-10-01"
+    assert filtered_records[-1].date == "2026-10-03"
