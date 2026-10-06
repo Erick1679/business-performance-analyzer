@@ -1,3 +1,4 @@
+import argparse
 import csv
 import pycountry
 from dataclasses import dataclass
@@ -534,20 +535,55 @@ def display_csv_report(file_path):
     display_daily_performance(records)
 
 
+def parse_arguments():
+    """Parse command-line arguments."""
+    parser = argparse.ArgumentParser(
+        description="Analyze business performance from a CSV file."
+    )
+
+    parser.add_argument(
+        "--start",
+        help="Start date for date-range analysis (YYYY-MM-DD).",
+    )
+
+    parser.add_argument(
+        "--end",
+        help="End date for date-range analysis (YYYY-MM-DD).",
+    )
+
+    return parser.parse_args()
+
+
 def main():
     """Run the business performance analyzer."""
     file_path = "data/raw/business_data.csv"
 
     try:
+        args = parse_arguments()
+
         records = load_records_from_csv(file_path)
 
         display_csv_report(file_path)
 
-        display_date_range_performance(
-            records,
-            date(2026, 10, 2),
-            date(2026, 10, 4),
-        )
+        if args.start or args.end:
+            if not args.start or not args.end:
+                raise ValueError(
+                    "Both --start and --end must be provided."
+                )
+
+            try:
+                start_date = date.fromisoformat(args.start)
+                end_date = date.fromisoformat(args.end)
+            except ValueError:
+                raise ValueError(
+                    "Dates must use YYYY-MM-DD format."
+                )
+
+            display_date_range_performance(
+                records,
+                start_date,
+                end_date,
+            )
 
     except FileNotFoundError:
         print(f"Error: CSV file not found: {file_path}")
