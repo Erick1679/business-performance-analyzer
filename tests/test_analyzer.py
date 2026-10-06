@@ -23,6 +23,7 @@ from src.calendar import (
     get_active_daily_performance,
     get_daily_performance,
     get_performance_between_dates,
+    summarize_monthly_performance,
 )
 def test_calculate_profit():
     assert calculate_profit(15000, 9000) == 6000
@@ -645,3 +646,45 @@ def test_get_performance_between_dates():
 
     assert performance[date(2026, 10, 2)]["profit"] == 4000
     assert performance[date(2026, 10, 3)]["profit"] == 1000
+def test_summarize_monthly_performance():
+    daily_data = {
+        date(2026, 10, 1): {
+            "sales": 15000,
+            "expenses": 9000,
+            "profit": 6000,
+            "transaction_count": 1,
+        },
+        date(2026, 10, 2): {
+            "sales": 10000,
+            "expenses": 6000,
+            "profit": 4000,
+            "transaction_count": 1,
+        },
+        date(2026, 11, 1): {
+            "sales": 5000,
+            "expenses": 4000,
+            "profit": 1000,
+            "transaction_count": 1,
+        },
+    }
+
+    monthly_data = summarize_monthly_performance(
+        daily_data,
+        year=2026,
+    )
+
+    assert len(monthly_data) == 2
+
+    assert monthly_data["2026-10"]["sales"] == 25000
+    assert monthly_data["2026-10"]["expenses"] == 15000
+    assert monthly_data["2026-10"]["profit"] == 10000
+    assert monthly_data["2026-10"]["transaction_count"] == 2
+    assert monthly_data["2026-10"]["active_days"] == 2
+    assert monthly_data["2026-10"]["profit_margin"] == 40
+
+    assert monthly_data["2026-11"]["sales"] == 5000
+    assert monthly_data["2026-11"]["expenses"] == 4000
+    assert monthly_data["2026-11"]["profit"] == 1000
+    assert monthly_data["2026-11"]["transaction_count"] == 1
+    assert monthly_data["2026-11"]["active_days"] == 1
+    assert monthly_data["2026-11"]["profit_margin"] == 20

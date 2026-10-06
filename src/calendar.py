@@ -156,3 +156,43 @@ def get_performance_between_dates(
         for current_date, day_data in daily_data.items()
         if start_date <= current_date <= end_date
     }
+def summarize_monthly_performance(daily_data, year=None):
+    """Summarize business performance for each month."""
+    monthly_data = {}
+
+    for current_date, day_data in daily_data.items():
+        if year is not None and current_date.year != year:
+            continue
+
+        month_key = current_date.strftime("%Y-%m")
+
+        if month_key not in monthly_data:
+            monthly_data[month_key] = {
+                "sales": 0,
+                "expenses": 0,
+                "profit": 0,
+                "transaction_count": 0,
+                "active_days": 0,
+            }
+
+        monthly_data[month_key]["sales"] += day_data["sales"]
+        monthly_data[month_key]["expenses"] += day_data["expenses"]
+        monthly_data[month_key]["profit"] += day_data["profit"]
+        monthly_data[month_key]["transaction_count"] += (
+            day_data["transaction_count"]
+        )
+
+        if day_data["transaction_count"] > 0:
+            monthly_data[month_key]["active_days"] += 1
+
+    for month_data in monthly_data.values():
+        sales = month_data["sales"]
+
+        if sales == 0:
+            month_data["profit_margin"] = 0
+        else:
+            month_data["profit_margin"] = (
+                month_data["profit"] / sales
+            ) * 100
+
+    return monthly_data
