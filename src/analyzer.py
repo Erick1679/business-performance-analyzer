@@ -6,6 +6,7 @@ from src.calendar import (
     analyze_daily_performance,
     build_daily_calendar,
     get_active_daily_performance,
+    summarize_monthly_performance,
 )
 
 
@@ -52,7 +53,9 @@ def calculate_profit_margin(sales, profit):
 
 def get_currency_name(currency_code):
     """Return the currency name for an ISO 4217 currency code."""
-    currency = pycountry.currencies.get(alpha_3=currency_code.upper())
+    currency = pycountry.currencies.get(
+        alpha_3=currency_code.upper()
+    )
 
     if currency is None:
         return None
@@ -138,7 +141,12 @@ def load_records_from_csv(file_path):
         "currency",
     }
 
-    with open(file_path, mode="r", newline="", encoding="utf-8") as file:
+    with open(
+        file_path,
+        mode="r",
+        newline="",
+        encoding="utf-8",
+    ) as file:
         reader = csv.DictReader(file)
 
         if reader.fieldnames is None:
@@ -219,6 +227,50 @@ def summarize_by_currency(records):
     return summaries
 
 
+def display_monthly_performance(records):
+    """Display calendar-based monthly performance separately by currency."""
+    currencies = sorted({record.currency for record in records})
+
+    print("\nMonthly Calendar Performance")
+    print("============================")
+
+    for currency in currencies:
+        currency_records = [
+            record
+            for record in records
+            if record.currency == currency
+        ]
+
+        daily_data = build_daily_calendar(currency_records)
+
+        monthly_data = summarize_monthly_performance(
+            daily_data,
+            year=None,
+        )
+
+        currency_name = get_currency_name(currency)
+
+        print(f"\nCurrency: {currency} - {currency_name}")
+
+        print(
+            "\nMonth      Transactions   Active Days"
+            "       Sales       Expenses       Profit       Margin"
+        )
+
+        print("-" * 90)
+
+        for month, month_data in sorted(monthly_data.items()):
+            print(
+                f"{month} "
+                f"{month_data['transaction_count']:>12} "
+                f"{month_data['active_days']:>13} "
+                f"{currency} {month_data['sales']:>10,.2f} "
+                f"{currency} {month_data['expenses']:>10,.2f} "
+                f"{currency} {month_data['profit']:>10,.2f} "
+                f"{month_data['profit_margin']:>9.2f}%"
+            )
+
+
 def display_daily_performance(records):
     """Display calendar-based daily performance separately by currency."""
     currencies = sorted({record.currency for record in records})
@@ -235,6 +287,7 @@ def display_daily_performance(records):
 
         daily_data = build_daily_calendar(currency_records)
         analysis = analyze_daily_performance(daily_data)
+
         active_daily_performance = get_active_daily_performance(
             daily_data
         )
@@ -267,10 +320,12 @@ def display_daily_performance(records):
             )
 
         print("\nDaily Performance:")
+
         print(
             "Date       Transactions       Sales"
             "       Expenses       Profit       Margin"
         )
+
         print("-" * 78)
 
         for day in active_daily_performance:
@@ -302,7 +357,9 @@ def display_csv_report(file_path):
             if record.currency == currency
         ]
 
-        averages = calculate_average_transaction(currency_records)
+        averages = calculate_average_transaction(
+            currency_records
+        )
 
         top_transaction = get_top_transaction_by_profit(
             currency_records
@@ -317,10 +374,22 @@ def display_csv_report(file_path):
         )
 
         print(f"\nCurrency: {currency} - {currency_name}")
-        print(f"Sales: {currency} {summary['total_sales']:,.2f}")
-        print(f"Expenses: {currency} {summary['total_expenses']:,.2f}")
-        print(f"Profit: {currency} {summary['total_profit']:,.2f}")
-        print(f"Profit Margin: {summary['profit_margin']:.2f}%")
+        print(
+            f"Sales: "
+            f"{currency} {summary['total_sales']:,.2f}"
+        )
+        print(
+            f"Expenses: "
+            f"{currency} {summary['total_expenses']:,.2f}"
+        )
+        print(
+            f"Profit: "
+            f"{currency} {summary['total_profit']:,.2f}"
+        )
+        print(
+            f"Profit Margin: "
+            f"{summary['profit_margin']:.2f}%"
+        )
 
         print(
             f"Average Sales: "
@@ -335,7 +404,10 @@ def display_csv_report(file_path):
             f"{currency} {averages['average_profit']:,.2f}"
         )
 
-        print(f"Top Transaction: {top_transaction.description}")
+        print(
+            f"Top Transaction: "
+            f"{top_transaction.description}"
+        )
         print(
             f"Top Transaction Profit: "
             f"{currency} {top_transaction.profit:,.2f}"
@@ -359,6 +431,7 @@ def display_csv_report(file_path):
         )
 
         print("\nTransaction Ranking:")
+
         for rank, transaction in enumerate(
             ranked_transactions,
             start=1,
@@ -369,6 +442,7 @@ def display_csv_report(file_path):
                 f"({transaction.profit_margin:.2f}% margin)"
             )
 
+    display_monthly_performance(records)
     display_daily_performance(records)
 
 
@@ -378,9 +452,11 @@ def main():
 
     try:
         display_csv_report(file_path)
+
     except FileNotFoundError:
         print(f"Error: CSV file not found: {file_path}")
         raise SystemExit(1)
+
     except InvalidBusinessDataError as error:
         print(f"Error: {error}")
         raise SystemExit(1)
