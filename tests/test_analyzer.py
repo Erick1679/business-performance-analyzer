@@ -21,8 +21,9 @@ from src.calendar import (
     calculate_daily_profit_margin,
     generate_calendar,
     get_active_daily_performance,
+    get_daily_performance,
+    get_performance_between_dates,
 )
-
 def test_calculate_profit():
     assert calculate_profit(15000, 9000) == 6000
 
@@ -577,3 +578,70 @@ def test_get_active_daily_performance():
     assert active_days[1]["expenses"] == 4000
     assert active_days[1]["profit"] == 1000
     assert active_days[1]["profit_margin"] == 20
+def test_get_daily_performance():
+    daily_data = {
+        date(2026, 10, 1): {
+            "sales": 15000,
+            "expenses": 9000,
+            "profit": 6000,
+            "transaction_count": 1,
+        },
+        date(2026, 10, 2): {
+            "sales": 10000,
+            "expenses": 6000,
+            "profit": 4000,
+            "transaction_count": 1,
+        },
+    }
+
+    performance = get_daily_performance(
+        daily_data,
+        date(2026, 10, 1),
+    )
+
+    assert performance["sales"] == 15000
+    assert performance["expenses"] == 9000
+    assert performance["profit"] == 6000
+    assert performance["transaction_count"] == 1
+def test_get_performance_between_dates():
+    daily_data = {
+        date(2026, 10, 1): {
+            "sales": 15000,
+            "expenses": 9000,
+            "profit": 6000,
+            "transaction_count": 1,
+        },
+        date(2026, 10, 2): {
+            "sales": 10000,
+            "expenses": 6000,
+            "profit": 4000,
+            "transaction_count": 1,
+        },
+        date(2026, 10, 3): {
+            "sales": 5000,
+            "expenses": 4000,
+            "profit": 1000,
+            "transaction_count": 1,
+        },
+        date(2026, 10, 4): {
+            "sales": 8000,
+            "expenses": 3500,
+            "profit": 4500,
+            "transaction_count": 1,
+        },
+    }
+
+    performance = get_performance_between_dates(
+        daily_data,
+        date(2026, 10, 2),
+        date(2026, 10, 3),
+    )
+
+    assert len(performance) == 2
+    assert date(2026, 10, 2) in performance
+    assert date(2026, 10, 3) in performance
+    assert date(2026, 10, 1) not in performance
+    assert date(2026, 10, 4) not in performance
+
+    assert performance[date(2026, 10, 2)]["profit"] == 4000
+    assert performance[date(2026, 10, 3)]["profit"] == 1000

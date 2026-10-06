@@ -142,3 +142,17 @@ def analyze_daily_performance(daily_data):
         "highest_profit_day": highest_profit_day,
         "lowest_profit_day": lowest_profit_day,
     }
+def get_daily_performance(daily_data, target_date):
+    """Return performance data for a specific date."""
+    return daily_data.get(target_date)
+def get_performance_between_dates(
+    daily_data,
+    start_date,
+    end_date,
+):
+    """Return daily performance within an inclusive date range."""
+    return {
+        current_date: day_data
+        for current_date, day_data in daily_data.items()
+        if start_date <= current_date <= end_date
+    }
