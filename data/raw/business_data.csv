@@ -1,6 +1,6 @@
-date,description,sales,expenses,currency
-2026-10-01,Consulting Project,15000,9000,USD
-2026-10-02,Data Analysis,10000,6000,USD
-2026-10-03,Training,5000,4000,USD
-2026-10-04,Executive Assistance,8000,3500,USD
-2026-10-05,Business Consulting,12000,7000,EUR
+id,date,service,description,sales,expenses,currency
+1,2026-10-01,Consulting,Consulting Project,15000,9000,USD
+2,2026-10-02,Data Analysis,Data Analysis,10000,6000,USD
+3,2026-10-03,Training,Training,5000,4000,USD
+4,2026-10-04,Executive Assistance,Executive Assistance,8000,3500,USD
+5,2026-10-05,Business Consulting,Business Consulting,12000,7000,EUR
